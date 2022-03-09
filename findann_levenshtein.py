@@ -14,6 +14,7 @@ Created on Tue Feb 15 13:47:53 2022
 # cache stores is decided. 
 
 import os, sys, re, numpy, time
+import Levenshtein as lv
 
 # Used only for testing - Candidates for parametrization 
 infile = "text_annotations_flywire.txt"
@@ -49,42 +50,6 @@ def read_file_into_memory():
 def preprocess(line):
     line = line.lower();
     return (line)
-
-def measureLevenshteinDistance(searchedWord, annotationWord):
-    distanceMatrix = numpy.zeros((len(searchedWord) + 1, len(annotationWord) + 1))
-
-    for searchedIndex in range(len(searchedWord) + 1):
-        distanceMatrix[searchedIndex][0] = searchedIndex
-
-    for annotatedIndex in range(len(annotationWord) + 1):
-        distanceMatrix[0][annotatedIndex] = annotatedIndex
-        
-    char1 = 0
-    char2 = 0
-    char3 = 0
-    
-    for searchedIndex in range(1, len(searchedWord) + 1):
-        for annotatedIndex in range(1, len(annotationWord) + 1):
-            if (searchedWord[searchedIndex-1] == annotationWord[annotatedIndex-1]):
-                distanceMatrix[searchedIndex][annotatedIndex] = distanceMatrix[searchedIndex - 1][annotatedIndex - 1]
-            else:
-                char1 = distanceMatrix[searchedIndex][annotatedIndex - 1]
-                char2 = distanceMatrix[searchedIndex - 1][annotatedIndex]
-                char3 = distanceMatrix[searchedIndex - 1][annotatedIndex - 1]
-                
-                if (char1 <= char2 and char1 <= char3):
-                    distanceMatrix[searchedIndex][annotatedIndex] = char1 + 1
-                elif (char2 <= char1 and char2 <= char3):
-                    distanceMatrix[searchedIndex][annotatedIndex] = char2 + 1
-                else:
-                    distanceMatrix[searchedIndex][annotatedIndex] = char3 + 1
-    return distanceMatrix[len(searchedWord)][len(annotationWord)]
-
-def printdistanceMatrix(distanceMatrix, searchedWordLength, annotationWordLength):
-    for searchedIndex in range(searchedWordLength + 1):
-        for annotatedIndex in range(annotationWordLength + 1):
-            print(int(distanceMatrix[searchedIndex][annotatedIndex]), end=" ")
-        
 
 
 #####                   #######
@@ -124,7 +89,7 @@ cnt = 0
 for i in range(len(filenameList)):
     words = re.split('[;,.\s]+', filenameList[i])
     for j in range(len(words)):
-        totalDistance = measureLevenshteinDistance(searchString, words[j])
+        totalDistance = lv.distance(searchString, words[j])
         if (totalDistance <= levenshteinThreshold):
             if(totalDistance == 0):
                 resultsList.append(i)
